@@ -207,6 +207,7 @@ static void seturgent(Client *c, int urg);
 static void showhide(Client *c);
 static void spawn(const Arg *arg);
 static void tag(const Arg *arg);
+static void lrtag(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
@@ -227,6 +228,7 @@ static void updatetitle(Client *c);
 static void updatewindowtype(Client *c);
 static void updatewmhints(Client *c);
 static void view(const Arg *arg);
+static void lrview(const Arg *arg);
 static Client *wintoclient(Window w);
 static Monitor *wintomon(Window w);
 static int xerror(Display *dpy, XErrorEvent *ee);
@@ -1677,6 +1679,25 @@ tag(const Arg *arg)
 }
 
 void
+lrtag(const Arg *arg)
+{
+	if (selmon->sel) {
+		unsigned int t = selmon->sel->tags;
+		if (t == 1 && arg->i == -1)
+			t = 1 << (LENGTH(tags) - 1);
+		else if (t == 1 << (LENGTH(tags) - 1) && arg->i == 1)
+			t = 1;
+		else if (arg->i == 1)
+			t <<= 1;
+		else if (arg->i == -1)
+			t >>= 1;
+		selmon->sel->tags = t;
+		focus(NULL);
+		arrange(selmon);
+	}
+}
+
+void
 tagmon(const Arg *arg)
 {
 	if (!selmon->sel || !mons->next)
@@ -2058,6 +2079,23 @@ view(const Arg *arg)
 	selmon->seltags ^= 1; /* toggle sel tagset */
 	if (arg->ui & TAGMASK)
 		selmon->tagset[selmon->seltags] = arg->ui & TAGMASK;
+	focus(NULL);
+	arrange(selmon);
+}
+
+void
+lrview(const Arg *arg)
+{
+	unsigned int t = selmon->tagset[selmon->seltags];
+	if (t == 1 && arg->i == -1)
+		t = 1 << (LENGTH(tags) - 1);
+	else if (t == 1 << (LENGTH(tags) - 1) && arg->i == 1)
+		t = 1;
+	else if (arg->i == 1)
+		t <<= 1;
+	else if (arg->i == -1)
+		t >>= 1;
+	selmon->tagset[selmon->seltags] = t;
 	focus(NULL);
 	arrange(selmon);
 }
